@@ -12,8 +12,6 @@
   let locked = new Set();
   let savedText = "[]";
   let busy = false;
-  // A jelszót a szerver ellenőrzi minden mentésnél. Csak a memóriában van, amíg nyitva az oldal.
-  let password = "";
 
   function setStatus(message, bad) {
     $("status").textContent = message;
@@ -81,39 +79,19 @@
   }
 
   function explain(status) {
-    if (status === 401) return "Hibás jelszó.";
     if (status === 503) return "Még nincs tároló a Vercel projekthez kötve, ezért nem lehet menteni.";
     if (status === 404 || status === 405) return "Ez csak a Vercelen futó oldalon működik.";
     return "Nem sikerült elérni a tárolót. Próbáld újra.";
   }
 
-  async function send(data) {
-    const response = await fetch(ACCESS_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error(explain(response.status));
-    return response.json();
-  }
-
-  async function handleLogin(event) {
-    event.preventDefault();
-    const typed = $("password").value;
-    $("login-status").textContent = "";
-    $("login-button").disabled = true;
+  async function loadLocked() {
     try {
-      const data = await send({ password: typed });
-      password = typed;
-      $("password").value = "";
-      $("login").hidden = true;
-      $("admin").hidden = false;
-      applyLocked(data.locked);
+      const response = await fetch(ACCESS_URL, { cache: "no-store" });
+      if (!response.ok) throw new Error(explain(response.status));
+      applyLocked((await response.json()).locked);
     } catch (error) {
-      $("login-status").textContent = error.message || "Nem sikerült elérni a szervert. Próbáld újra.";
-      $("password").select();
+      setStatus(error.message || "Nem sikerült elérni a szervert. Próbáld újra.", true);
     }
-    $("login-button").disabled = false;
   }
 
   async function saveLocked() {
@@ -121,8 +99,13 @@
     renderSave();
     setStatus("Mentés...");
     try {
-      const data = await send({ password, locked: JSON.parse(lockedText()) });
-      applyLocked(data.locked);
+      const response = await fetch(ACCESS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locked: JSON.parse(lockedText()) }),
+      });
+      if (!response.ok) throw new Error(explain(response.status));
+      applyLocked((await response.json()).locked);
       setStatus("Elmentve. Legfeljebb 15 másodpercen belül érvényes a játékban.");
     } catch (error) {
       setStatus(error.message || "Nem sikerült elérni a szervert. Próbáld újra.", true);
@@ -131,8 +114,10 @@
     renderSave();
   }
 
-  $("login-form").addEventListener("submit", handleLogin);
   $("open-all").addEventListener("click", () => setAll(false));
   $("lock-all").addEventListener("click", () => setAll(true));
   $("save").addEventListener("click", saveLocked);
+
+  renderLevels();
+  loadLocked();
 })();

@@ -14,26 +14,17 @@
   <main class="panel">
     <h1 class="title">Krumplisteszta</h1>
 
-    <section class="block" id="login">
-      <form class="stack" id="login-form">
-        <label class="field-label" for="password">Jelszó</label>
-        <input class="field" id="password" type="password" autocomplete="current-password" required autofocus>
-        <button class="btn" id="login-button" type="submit">Belépés</button>
-        <p class="status bad" id="login-status" role="status" aria-live="polite"></p>
-      </form>
-    </section>
-
-    <section class="block" id="admin" hidden aria-labelledby="levels-title">
-      <p class="lead">Itt állítod be, melyik feladathoz férhet hozzá a játékos.</p>
+    <section class="block" id="admin" aria-labelledby="levels-title">
+      <p class="lead">Itt állítod be, melyik fejezeteket lehet elindítani.</p>
       <div class="block-head">
-        <h2 class="block-title" id="levels-title">Feladatok</h2>
+        <h2 class="block-title" id="levels-title">Fejezetek</h2>
         <div class="quick">
           <button class="ghost" id="open-all" type="button">Mind nyitva</button>
           <button class="ghost" id="lock-all" type="button">Mind zárva</button>
         </div>
       </div>
       <ul class="levels" id="levels"></ul>
-      <p class="note">A zárolt feladatot a játék átugorja. Ha a játékos előtt már nincs nyitott feladat, a játék várakozik, és magától továbbenged, amint kinyílik egy.</p>
+      <p class="note">A zárolt fejezetet a játék átugorja. Ha a játékos előtt már nincs nyitott fejezet, a játék várakozik, és magától továbbenged, amint kinyílik egy.</p>
       <div class="actions">
         <button class="btn" id="save" type="button" disabled>Mentés</button>
         <p class="status" id="status" role="status" aria-live="polite"></p>

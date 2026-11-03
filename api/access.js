@@ -1,17 +1,8 @@
-// A feladatok hozzáférhetősége. A játék olvassa, a krumplisteszta.html jelszóval írja.
+// A fejezetek hozzáférhetősége. A játék olvassa, a krumplisteszta.html írja.
 // Az adat egy Upstash Redis tárolóban van, amit a Vercel projekthez kell kötni.
-
-const crypto = require("crypto");
 
 const KEY = "locked-levels";
 const MAX_LEVEL = 100;
-
-// A jelszó nincs a kódban, csak a lenyomata.
-const PASSWORD = {
-  salt: "b1V6zTUP7oYT6onRXqKi7g==",
-  rounds: 600000,
-  hash: "vidcfh/SIPFFEVrEVdS6KVXq4my6X1J+YyxjClu0sXY=",
-};
 
 function storeConfig() {
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
@@ -34,12 +25,6 @@ async function readLocked(store) {
   return stored ? JSON.parse(stored) : [];
 }
 
-function isPasswordRight(password) {
-  if (typeof password !== "string") return false;
-  const actual = crypto.pbkdf2Sync(password.normalize("NFC"), Buffer.from(PASSWORD.salt, "base64"), PASSWORD.rounds, 32, "sha256");
-  return crypto.timingSafeEqual(actual, Buffer.from(PASSWORD.hash, "base64"));
-}
-
 function cleanLocked(list) {
   if (!Array.isArray(list)) return null;
   const numbers = list.filter((number) => Number.isInteger(number) && number >= 1 && number <= MAX_LEVEL);
@@ -50,7 +35,7 @@ module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   const store = storeConfig();
 
-  // A játék ezt kérdezi. Ha nincs tároló, vagy hibázik, minden nyitva marad, hogy ne akadjon el.
+  // Ha nincs tároló, vagy hibázik, minden nyitva marad, hogy a játék ne akadjon el.
   if (req.method === "GET") {
     try {
       res.status(200).json({ locked: store ? await readLocked(store) : [] });
@@ -66,27 +51,16 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const body = req.body || {};
-  if (!isPasswordRight(body.password)) {
-    res.status(401).json({ error: "password" });
-    return;
-  }
-
-  // Jelszó lista nélkül: belépés. Jelszó listával: mentés.
   if (!store) {
     res.status(503).json({ error: "no-store" });
     return;
   }
+  const locked = cleanLocked((req.body || {}).locked);
+  if (!locked) {
+    res.status(400).json({ error: "list" });
+    return;
+  }
   try {
-    if (body.locked === undefined) {
-      res.status(200).json({ locked: await readLocked(store) });
-      return;
-    }
-    const locked = cleanLocked(body.locked);
-    if (!locked) {
-      res.status(400).json({ error: "list" });
-      return;
-    }
     await redis(store, ["SET", KEY, JSON.stringify(locked)]);
     res.status(200).json({ locked });
   } catch (error) {
