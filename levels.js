@@ -18,6 +18,9 @@
 const GAME = {
   title: "Pink Puzzle",
 
+  // A lezárt fejezetek helye az adatbázisban. A krumplisteszta.html írja, a játék olvassa.
+  accessUrl: "https://petijatek-588da-default-rtdb.europe-west1.firebasedatabase.app/lockedChapters.json",
+
   // Ez fogad az oldal megnyitásakor.
   welcome: "Már vártunk téged, Peti-kun =￣ω￣=",
 

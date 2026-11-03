@@ -16,9 +16,9 @@
   }
 
   const LEVEL_KEY = "pink-puzzle:level";
-  const LOCKED_KEY = "pink-puzzle:locked";
   const SOUND_KEY = "pink-puzzle:sound";
   const NEXT_LEVEL_DELAY = 1100;
+  const ACCESS_TIMEOUT = 3000;
   const MUSIC_VOLUME = 0.5;
   const TYPE_SPEED = 26;
   const CURTAIN_FADE = 900;
@@ -40,6 +40,7 @@
   let asker = null;
   let soundOn = true;
   let waitingForAccess = false;
+  let lockedChapters = new Set();
 
   // A localStorage tiltott lehet, ilyenkor a játék mentés nélkül fut.
   function load(key) {
@@ -344,14 +345,22 @@
 
   /* ---------- Hozzáférés ---------- */
 
-  // A listát a krumplisteszta.html írja ugyanebbe a böngészőbe. A sorszámok 1-től indulnak.
+  // A lezárt fejezeteket a krumplisteszta.html írja az adatbázisba: { c1: true, c4: true }.
+  // Ha nem érhető el, a legutóbbi állapot marad, kezdetben pedig minden nyitva van.
+  function refreshAccess() {
+    const request = fetch(GAME.accessUrl, { cache: "no-store" })
+      .then((response) => (response.ok ? response.json().then(applyAccess) : null))
+      .catch(() => {});
+    const timeout = new Promise((resolve) => setTimeout(resolve, ACCESS_TIMEOUT));
+    return Promise.race([request, timeout]);
+  }
+
+  function applyAccess(data) {
+    lockedChapters = new Set(Object.keys(data || {}).filter((key) => data[key] === true));
+  }
+
   function isLocked(index) {
-    try {
-      const list = JSON.parse(load(LOCKED_KEY));
-      return Array.isArray(list) && list.includes(index + 1);
-    } catch (e) {
-      return false;
-    }
+    return lockedChapters.has("c" + (index + 1));
   }
 
   // A kikapcsolt fejezet nem töltődik be, csak ez a felirat látszik a helyén.
@@ -364,20 +373,27 @@
     $("curtain").classList.add("on");
   }
 
-  // Ha a másik lapon átkapcsolják a fejezetet, a játék azonnal követi.
+  // Az adatbázis azonnal szól, ha átkapcsolnak egy fejezetet, és a játék rögtön követi.
   function watchAccess() {
-    window.addEventListener("storage", (event) => {
-      if (event.key !== LOCKED_KEY) return;
+    if (!GAME.accessUrl || !window.EventSource) return;
+    const stream = new EventSource(GAME.accessUrl);
+    const handleChange = () => refreshAccess().then(() => {
       if (waitingForAccess) {
         if (!isLocked(current)) renderLevel();
       } else if (!locked && isLocked(current)) {
         showLocked();
       }
     });
+    stream.addEventListener("put", handleChange);
+    stream.addEventListener("patch", handleChange);
   }
 
   function renderLevel() {
     locked = true;
+    refreshAccess().then(showLevel);
+  }
+
+  function showLevel() {
     if (isLocked(current)) {
       showLocked();
       return;
@@ -730,6 +746,7 @@
     const welcome = $("welcome");
     if (welcome.classList.contains("leaving")) return;
     current = level;
+    watchAccess();
     ambience.start();
     welcome.classList.add("leaving");
     setTimeout(() => {
@@ -789,7 +806,6 @@
     goTo(0);
   });
   setupEntry();
-  watchAccess();
   $("sound").addEventListener("click", toggleSound);
   $("stage").addEventListener("click", handleStageClick);
   document.addEventListener("keydown", handleKey);

@@ -1,0 +1,14 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "lockedChapters": {
+      ".read": true,
+      ".write": true,
+      ".validate": "newData.hasChildren()",
+      "$chapter": {
+        ".validate": "$chapter.matches(/^c[1-9][0-9]?$/) && newData.val() === true"
+      }
+    }
+  }
+}
