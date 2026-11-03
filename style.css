@@ -69,6 +69,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
+  overflow-y: auto;
   text-align: center;
   background: radial-gradient(circle at 50% 42%, #2a0a26, var(--night) 62%);
   transition: opacity 0.7s ease;
@@ -161,11 +162,35 @@ body {
 /* A színpad egy macskaszem résén át nyílik ki. */
 .stage {
   position: fixed;
-  inset: 0;
+  top: var(--view-top, 0);
+  left: 0;
+  right: 0;
+  height: var(--view-height, 100%);
   z-index: 40;
   overflow: hidden;
   background: var(--night);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
 }
+
+.stage input {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Amíg nyitva a telefon billentyűzete, csak a párbeszéd számít. */
+.stage.keyboard .bar { display: none; }
+.stage.keyboard .dialog {
+  bottom: 6px;
+  max-height: calc(100% - 12px);
+  padding-top: 14px;
+  padding-bottom: 12px;
+}
+.stage.keyboard .line { min-height: 0; }
+.stage.keyboard .hint { margin: 10px 0 8px; padding: 12px 12px 6px; }
+.stage.keyboard .puzzle { margin-top: 6px; }
 
 .stage.opening { animation: slit-open 2.2s cubic-bezier(0.7, 0, 0.2, 1) forwards; }
 
@@ -736,6 +761,16 @@ body {
   .chapter-label { display: none; }
   .progress { justify-content: flex-start; font-size: 1rem; }
   .btn { padding-inline: 22px; }
+  /* Keskeny kijelzőn a beszélő középre áll, különben levágódna a feje. */
+  .cast:not(.everyone) .sprite.speaking { left: 50%; }
+  /* A homályosítás telefonon lassú, és itt alig látszik. */
+  .layer.near { filter: none; }
+  .dialog, .win {
+    background: rgba(30, 7, 30, 0.93);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .dialog.narration { background: transparent; }
 }
 
 @media (max-width: 520px) {
@@ -743,6 +778,10 @@ body {
 }
 
 @media (max-height: 520px) {
+  .welcome { justify-content: flex-start; padding-top: 12px; padding-bottom: 12px; }
+  .welcome-eyes { height: 70px; flex: none; margin-bottom: 6px; }
+  .welcome-text { font-size: clamp(1.5rem, 8vh, 2.4rem); }
+  .welcome-title { margin: 8px 0; }
   .dialog { padding-top: 16px; padding-bottom: 12px; }
   .line { min-height: 0; }
   .hint { margin-top: 6px; margin-bottom: 8px; padding: 10px 12px 6px; }

@@ -19,6 +19,7 @@
   const SOUND_KEY = "pink-puzzle:sound";
   const NEXT_LEVEL_DELAY = 1100;
   const ACCESS_TIMEOUT = 3000;
+  const KEYBOARD_RATIO = 0.8;
   const MUSIC_VOLUME = 0.5;
   const TYPE_SPEED = 26;
   const CURTAIN_FADE = 900;
@@ -131,6 +132,7 @@
 
   // A "*" mindenkit kivilágít.
   function setSpeaker(id) {
+    $("cast").classList.toggle("everyone", id === "*");
     Object.keys(stage.sprites).forEach((key) => {
       stage.sprites[key].classList.toggle("speaking", id === "*" || key === id);
     });
@@ -518,9 +520,26 @@
   function setupParallax() {
     if (calm) return;
     $("stage").addEventListener("pointermove", (event) => {
+      if (event.pointerType === "touch") return;
       $("stage").style.setProperty("--px", (0.5 - event.clientX / window.innerWidth).toFixed(3));
       $("stage").style.setProperty("--py", (0.5 - event.clientY / window.innerHeight).toFixed(3));
     });
+  }
+
+  // Telefonon a billentyűzet csak a látható részt csökkenti, ezért a színpad ehhez igazodik.
+  function setupViewport() {
+    const view = window.visualViewport;
+    if (!view) return;
+    const update = () => {
+      const element = $("stage");
+      element.style.setProperty("--view-top", view.offsetTop + "px");
+      element.style.setProperty("--view-height", view.height + "px");
+      element.classList.toggle("keyboard", view.height < window.innerHeight * KEYBOARD_RATIO);
+      if (document.activeElement === $("answer")) $("answer").scrollIntoView({ block: "nearest" });
+    };
+    view.addEventListener("resize", update);
+    view.addEventListener("scroll", update);
+    update();
   }
 
   /* ---------- Hang ---------- */
@@ -799,6 +818,7 @@
   setupWelcome();
   fillSky();
   setupParallax();
+  setupViewport();
   renderSound();
   $("form").addEventListener("submit", handleSubmit);
   $("restart").addEventListener("click", () => {
