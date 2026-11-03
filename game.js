@@ -41,6 +41,7 @@
   let asker = null;
   let soundOn = true;
   let lockedLevels = new Set();
+  let waitingForAccess = false;
 
   // A localStorage tiltott lehet, ilyenkor a játék mentés nélkül fut.
   function load(key) {
@@ -341,9 +342,9 @@
 
   /* ---------- Hozzáférés ---------- */
 
-  // Az access-settings.json-t a krumplisteszta.html írja. Ha nem érhető el, a legutóbbi állapot marad.
+  // Az api/access listáját a krumplisteszta.html írja. Ha nem érhető el, a legutóbbi állapot marad.
   function refreshAccess() {
-    const request = fetch("access-settings.json?t=" + Date.now(), { cache: "no-store" })
+    const request = fetch("api/access?t=" + Date.now(), { cache: "no-store" })
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
         if (data && Array.isArray(data.locked)) lockedLevels = new Set(data.locked);
@@ -353,7 +354,7 @@
     return Promise.race([request, timeout]);
   }
 
-  // Az access-settings.json a fejezetek sorszámát tárolja, ezek 1-től indulnak.
+  // A lista a fejezetek sorszámát tárolja, ezek 1-től indulnak.
   function isLocked(index) {
     return lockedLevels.has(index + 1);
   }
@@ -375,15 +376,22 @@
       clearStage(waiting.bg || stage.background || "door");
     }, () => {
       showLine(waiting);
-      waitForAccess();
+      waitingForAccess = true;
     });
   }
 
-  function waitForAccess() {
-    setTimeout(() => {
+  // Játék közben is figyeli a listát: a várakozót továbbengedi, a lezárt feladatról továbblép.
+  function watchAccess() {
+    setInterval(() => {
+      if (document.hidden) return;
       refreshAccess().then(() => {
-        if (nextOpenLevel(current) === null) waitForAccess();
-        else renderLevel();
+        if (waitingForAccess) {
+          if (nextOpenLevel(current) === null) return;
+          waitingForAccess = false;
+          renderLevel();
+        } else if (!locked && isLocked(current)) {
+          renderLevel();
+        }
       });
     }, ACCESS_POLL);
   }
@@ -750,6 +758,7 @@
     const welcome = $("welcome");
     if (welcome.classList.contains("leaving")) return;
     current = level;
+    watchAccess();
     ambience.start();
     welcome.classList.add("leaving");
     setTimeout(() => {
