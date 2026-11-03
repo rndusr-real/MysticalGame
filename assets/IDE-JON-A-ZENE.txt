@@ -1,0 +1,2 @@
+Tedd ide a közös zenét music.mp3 néven. A wav is jó, csak akkor írd át a fájlnevet.
+A zenék helyét a levels.js fájl "music" sorai adják meg: a fájl elején a közös zenéét, a szinteknél a sajátjukat.

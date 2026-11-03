@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pink Puzzle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Pacifico&family=Quicksand:wght@500;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="stage" id="stage" hidden>
+    <div class="world" id="world" aria-hidden="true"></div>
+    <div class="darkness" id="darkness" aria-hidden="true"></div>
+    <div class="sky" id="sky" aria-hidden="true"></div>
+    <div class="cast" id="cast" aria-hidden="true"></div>
+    <div class="scrim" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <header class="bar bar-top">
+      <p class="chapter-label" id="chapter-label"></p>
+      <div class="progress" id="progress" role="img"></div>
+      <div class="controls">
+        <button class="control" id="sound" type="button"></button>
+      </div>
+    </header>
+    <div class="bar bar-bottom" aria-hidden="true"></div>
+
+    <main class="dialog" id="dialog">
+      <p class="speaker" id="speaker" hidden></p>
+      <p class="line" id="line" aria-hidden="true"><span id="line-shown"></span><span class="line-rest" id="line-rest"></span></p>
+      <span class="next" id="next" aria-hidden="true" hidden>♥︎</span>
+      <p class="sr-only" id="live" role="status" aria-live="polite"></p>
+
+      <div class="puzzle" id="puzzle" hidden>
+        <div class="hint" id="hint" hidden>
+          <span class="hint-label" id="hint-label"></span>
+          <p class="hint-text" id="hint-text"></p>
+        </div>
+        <form class="answer-form" id="form" autocomplete="off">
+          <input class="answer" id="answer" type="text" autocapitalize="off" autocorrect="off" spellcheck="false">
+          <button class="btn" id="submit" type="submit"></button>
+        </form>
+      </div>
+    </main>
+
+    <section class="win" id="win" hidden>
+      <h2 class="win-title" id="win-title"></h2>
+      <p class="win-text" id="win-text"></p>
+      <button class="btn" id="restart" type="button"></button>
+    </section>
+
+    <div class="flash" id="flash" aria-hidden="true"></div>
+    <div class="confetti" id="confetti" aria-hidden="true"></div>
+  </div>
+
+  <div class="curtain" id="curtain" aria-hidden="true">
+    <p class="curtain-number" id="curtain-number"></p>
+    <p class="curtain-title" id="curtain-title"></p>
+  </div>
+
+  <section class="welcome" id="welcome">
+    <div class="welcome-eyes" id="welcome-eyes" aria-hidden="true"></div>
+    <h1 class="welcome-text" id="welcome-text"></h1>
+    <p class="welcome-title" id="title"></p>
+    <div class="welcome-actions">
+      <button class="btn" id="enter" type="button"></button>
+      <button class="btn btn-soft" id="resume" type="button" hidden></button>
+    </div>
+  </section>
+
+  <div class="grain" aria-hidden="true"></div>
+
+  <script src="art.js"></script>
+  <script src="levels.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
