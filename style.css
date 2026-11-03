@@ -749,17 +749,13 @@ body {
   .puzzle { margin-top: 6px; }
 }
 
+/* Csökkentett mozgásnál a finom animációk megmaradnak, csak a nagy mozgások maradnak el. */
 @media (prefers-reduced-motion: reduce) {
-  .grain, .scene, .star, .halo, .lantern-glow, .cloud, .spin, .lock-open, .drift,
-  .pip.now, .next, .eyes, .night-eye, .tail, .ear { animation: none; }
-  .float, .petal { top: var(--y); animation: none; }
-  .dark-eyes { opacity: 1; animation: none; }
-  .welcome-word, .welcome-title, .welcome-actions { opacity: 1; animation: none; }
-  .stage.opening, .stage.shake, .flash.go { animation: none; }
-  .curtain.on .curtain-number, .curtain.on .curtain-title { animation: none; }
-  .win { animation: none; }
-  .sprite, .scene, .girl, .darkness, .curtain { transition: none; }
+  .grain, .scene, .stage.shake { animation: none; }
+  .stage.opening { animation: stage-fade 1.2s ease; }
   .layer { transition: none; transform: none; }
-  .btn { transition: none; }
-  .btn:hover::after { transition: none; }
+}
+
+@keyframes stage-fade {
+  from { opacity: 0; }
 }

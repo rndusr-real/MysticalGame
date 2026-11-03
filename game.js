@@ -29,6 +29,7 @@
   const levels = GAME.levels || [];
   const texts = GAME.texts || {};
   const people = GAME.cast || {};
+  // Csökkentett mozgásnál csak a nagy mozgások maradnak el, a finom animációk nem. A többi a style.css végén van.
   const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   let current = 0;
@@ -88,7 +89,7 @@
     world.appendChild(scene);
     void scene.offsetWidth;
     scene.classList.add("shown");
-    setTimeout(() => old.forEach((element) => element.remove()), calm ? 0 : 1700);
+    setTimeout(() => old.forEach((element) => element.remove()), 1700);
   }
 
   function spriteFor(id) {
@@ -166,7 +167,7 @@
     $("live").textContent = text;
     $("line-shown").textContent = "";
     $("line-rest").textContent = text;
-    if (calm || !letters.length) {
+    if (!letters.length) {
       $("line-shown").textContent = text;
       $("line-rest").textContent = "";
       if (done) done();
@@ -250,7 +251,7 @@
   // A fejezetcím kattintással átugorható.
   function curtain(number, title, middle, after) {
     const element = $("curtain");
-    const fade = calm ? 0 : CURTAIN_FADE;
+    const fade = CURTAIN_FADE;
     const hold = number || title ? CHAPTER_HOLD : 250;
     let timer = null;
 
@@ -415,7 +416,6 @@
   }
 
   function burst(count) {
-    if (calm) return;
     const tones = ["#ff4f9f", "#ff8cc6", "#ffc4e2", "#ffffff"];
     const shapes = ["♥︎", "✦︎", "♡︎"];
     const box = $("confetti");
@@ -689,7 +689,7 @@
     welcome.classList.add("leaving");
     setTimeout(() => {
       welcome.hidden = true;
-    }, calm ? 0 : 900);
+    }, 900);
 
     // Az elejéről indulva a prológus jön, folytatásnál rögtön a szint.
     const start = () => {
@@ -708,8 +708,8 @@
       $("stage").hidden = false;
       $("stage").classList.add("opening");
       start();
-      setTimeout(() => $("stage").classList.remove("opening"), calm ? 0 : 2300);
-    }, calm ? 0 : 500);
+      setTimeout(() => $("stage").classList.remove("opening"), 2300);
+    }, 500);
   }
 
   // Csak félbehagyott játék folytatható. A szintek száma szerkesztés után csökkenhetett,
