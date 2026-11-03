@@ -99,6 +99,9 @@ const GAME = {
   winTitle: "Kész vagy!",
   winText: "Minden szintet megoldottál, te kis zseni. ♥",
 
+  // Ezt mondják, ha a játékos előtt már minden feladat zárva van (krumplisteszta.html).
+  waiting: { who: "yoru", mood: "neutral", bg: "door", text: "Ez a zár még nem nyílik, Peti-kun. Várj egy kicsit, szólunk, ha mehetsz tovább." },
+
   levels: [
     {
       // music: a szint saját zenéje (mp3 vagy wav), amíg ezen a szinten vagy, ismétlődve szól. Elhagyható.

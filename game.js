@@ -18,6 +18,8 @@
   const LEVEL_KEY = "pink-puzzle:level";
   const SOUND_KEY = "pink-puzzle:sound";
   const NEXT_LEVEL_DELAY = 1100;
+  const ACCESS_TIMEOUT = 3000;
+  const ACCESS_POLL = 15000;
   const MUSIC_VOLUME = 0.5;
   const TYPE_SPEED = 26;
   const CURTAIN_FADE = 900;
@@ -38,6 +40,7 @@
   let story = null;
   let asker = null;
   let soundOn = true;
+  let lockedLevels = new Set();
 
   // A localStorage tiltott lehet, ilyenkor a játék mentés nélkül fut.
   function load(key) {
@@ -69,7 +72,7 @@
     levels.forEach((_, index) => {
       const pip = document.createElement("span");
       pip.textContent = "♥︎";
-      pip.className = "pip" + (index < current ? " done" : index === current ? " now" : "");
+      pip.className = "pip" + (index < current && !isLocked(index) ? " done" : index === current ? " now" : "");
       progress.appendChild(pip);
     });
   }
@@ -336,8 +339,70 @@
     return ROMAN[index] ? ROMAN[index] + ". " + (texts.chapter || "") : "";
   }
 
+  /* ---------- Hozzáférés ---------- */
+
+  // Az access-settings.json-t a krumplisteszta.html írja. Ha nem érhető el, a legutóbbi állapot marad.
+  function refreshAccess() {
+    const request = fetch("access-settings.json?t=" + Date.now(), { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (data && Array.isArray(data.locked)) lockedLevels = new Set(data.locked);
+      })
+      .catch(() => {});
+    const timeout = new Promise((resolve) => setTimeout(resolve, ACCESS_TIMEOUT));
+    return Promise.race([request, timeout]);
+  }
+
+  // Az access-settings.json a fejezetek sorszámát tárolja, ezek 1-től indulnak.
+  function isLocked(index) {
+    return lockedLevels.has(index + 1);
+  }
+
+  // A zárolt szinteket átugorja. Ha előre már nincs nyitott szint, null az eredmény.
+  function nextOpenLevel(from) {
+    for (let i = from; i < levels.length; i++) {
+      if (!isLocked(i)) return i;
+    }
+    return from >= levels.length ? from : null;
+  }
+
+  function showWaiting() {
+    const waiting = GAME.waiting || {};
+    renderProgress();
+    setTrack("");
+    curtain("", "", () => {
+      $("chapter-label").textContent = "";
+      clearStage(waiting.bg || stage.background || "door");
+    }, () => {
+      showLine(waiting);
+      waitForAccess();
+    });
+  }
+
+  function waitForAccess() {
+    setTimeout(() => {
+      refreshAccess().then(() => {
+        if (nextOpenLevel(current) === null) waitForAccess();
+        else renderLevel();
+      });
+    }, ACCESS_POLL);
+  }
+
   function renderLevel() {
     locked = true;
+    refreshAccess().then(showOpenLevel);
+  }
+
+  function showOpenLevel() {
+    const next = nextOpenLevel(current);
+    if (next === null) {
+      showWaiting();
+      return;
+    }
+    if (next !== current) {
+      current = next;
+      save(LEVEL_KEY, String(current));
+    }
     renderProgress();
     setTrack(trackFor(current));
 
