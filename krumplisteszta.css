@@ -156,31 +156,14 @@ a { color: var(--line); }
   font-size: 0.9rem;
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.btn, .ghost {
+.ghost {
   font: inherit;
   font-weight: 700;
   border-radius: 999px;
   cursor: pointer;
 }
 
-.btn {
-  min-height: 46px;
-  padding: 10px 30px;
-  color: #fff;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  border: 0;
-  box-shadow: 0 0 20px var(--glow);
-}
-.btn:disabled { opacity: 0.45; box-shadow: none; cursor: default; }
-.btn:focus-visible, .ghost:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.ghost:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 .ghost {
   min-height: 34px;

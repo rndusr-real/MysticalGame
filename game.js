@@ -16,10 +16,9 @@
   }
 
   const LEVEL_KEY = "pink-puzzle:level";
+  const LOCKED_KEY = "pink-puzzle:locked";
   const SOUND_KEY = "pink-puzzle:sound";
   const NEXT_LEVEL_DELAY = 1100;
-  const ACCESS_TIMEOUT = 3000;
-  const ACCESS_POLL = 15000;
   const MUSIC_VOLUME = 0.5;
   const TYPE_SPEED = 26;
   const CURTAIN_FADE = 900;
@@ -40,7 +39,6 @@
   let story = null;
   let asker = null;
   let soundOn = true;
-  let lockedLevels = new Set();
   let waitingForAccess = false;
 
   // A localStorage tiltott lehet, ilyenkor a játék mentés nélkül fut.
@@ -279,6 +277,10 @@
   /* ---------- Szintek ---------- */
 
   function openPuzzle() {
+    if (isLocked(current)) {
+      showLocked();
+      return;
+    }
     const level = levels[current];
     const ask = level.ask || {};
     const hint = String(level.hint || "").trim();
@@ -342,75 +344,45 @@
 
   /* ---------- Hozzáférés ---------- */
 
-  // Az api/access listáját a krumplisteszta.html írja. Ha nem érhető el, a legutóbbi állapot marad.
-  function refreshAccess() {
-    const request = fetch("api/access?t=" + Date.now(), { cache: "no-store" })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => {
-        if (data && Array.isArray(data.locked)) lockedLevels = new Set(data.locked);
-      })
-      .catch(() => {});
-    const timeout = new Promise((resolve) => setTimeout(resolve, ACCESS_TIMEOUT));
-    return Promise.race([request, timeout]);
-  }
-
-  // A lista a fejezetek sorszámát tárolja, ezek 1-től indulnak.
+  // A listát a krumplisteszta.html írja ugyanebbe a böngészőbe. A sorszámok 1-től indulnak.
   function isLocked(index) {
-    return lockedLevels.has(index + 1);
-  }
-
-  // A zárolt szinteket átugorja. Ha előre már nincs nyitott szint, null az eredmény.
-  function nextOpenLevel(from) {
-    for (let i = from; i < levels.length; i++) {
-      if (!isLocked(i)) return i;
+    try {
+      const list = JSON.parse(load(LOCKED_KEY));
+      return Array.isArray(list) && list.includes(index + 1);
+    } catch (e) {
+      return false;
     }
-    return from >= levels.length ? from : null;
   }
 
-  function showWaiting() {
-    const waiting = GAME.waiting || {};
+  // A kikapcsolt fejezet nem töltődik be, csak ez a felirat látszik a helyén.
+  function showLocked() {
+    waitingForAccess = true;
     renderProgress();
     setTrack("");
-    curtain("", "", () => {
-      $("chapter-label").textContent = "";
-      clearStage(waiting.bg || stage.background || "door");
-    }, () => {
-      showLine(waiting);
-      waitingForAccess = true;
-    });
+    $("curtain-number").textContent = "";
+    $("curtain-title").textContent = texts.comeBack || "";
+    $("curtain").classList.add("on");
   }
 
-  // Játék közben is figyeli a listát: a várakozót továbbengedi, a lezárt feladatról továbblép.
+  // Ha a másik lapon átkapcsolják a fejezetet, a játék azonnal követi.
   function watchAccess() {
-    setInterval(() => {
-      if (document.hidden) return;
-      refreshAccess().then(() => {
-        if (waitingForAccess) {
-          if (nextOpenLevel(current) === null) return;
-          waitingForAccess = false;
-          renderLevel();
-        } else if (!locked && isLocked(current)) {
-          renderLevel();
-        }
-      });
-    }, ACCESS_POLL);
+    window.addEventListener("storage", (event) => {
+      if (event.key !== LOCKED_KEY) return;
+      if (waitingForAccess) {
+        if (!isLocked(current)) renderLevel();
+      } else if (!locked && isLocked(current)) {
+        showLocked();
+      }
+    });
   }
 
   function renderLevel() {
     locked = true;
-    refreshAccess().then(showOpenLevel);
-  }
-
-  function showOpenLevel() {
-    const next = nextOpenLevel(current);
-    if (next === null) {
-      showWaiting();
+    if (isLocked(current)) {
+      showLocked();
       return;
     }
-    if (next !== current) {
-      current = next;
-      save(LEVEL_KEY, String(current));
-    }
+    waitingForAccess = false;
     renderProgress();
     setTrack(trackFor(current));
 
@@ -758,7 +730,6 @@
     const welcome = $("welcome");
     if (welcome.classList.contains("leaving")) return;
     current = level;
-    watchAccess();
     ambience.start();
     welcome.classList.add("leaving");
     setTimeout(() => {
@@ -818,6 +789,7 @@
     goTo(0);
   });
   setupEntry();
+  watchAccess();
   $("sound").addEventListener("click", toggleSound);
   $("stage").addEventListener("click", handleStageClick);
   document.addEventListener("keydown", handleKey);
