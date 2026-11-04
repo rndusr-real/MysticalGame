@@ -190,6 +190,9 @@ const GAME = {
       hint: "Az AI nem mindig olyan hasznos ám!",
       wrong: [
         "Ez nem az. A sensei feladta a feladatot.",
+        "Kattog az óra, telik az idő...",
+        "Gyakorlati türelem rózsát (és tokent) terem..",
+        "Ebéd után jobban esik a desszert",
         "Nem olvasta el a feladatot, ugye?",
         "Az utolso feladat Peti-kun. Azt olvassa, ne a monitort nézze.",
         "Kicsit mélyebben elemezze Peti-kun a feladatot"
